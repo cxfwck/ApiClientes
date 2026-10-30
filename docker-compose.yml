@@ -1,0 +1,51 @@
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: api-clientes-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: bd-apiclientes
+      POSTGRES_USER: coti
+      POSTGRES_PASSWORD: coti
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - api-clientes-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U coti -d bd-apiclientes"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: api-clientes-pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@coti.com
+      PGADMIN_DEFAULT_PASSWORD: coti
+    ports:
+      - "5052:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - api-clientes-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost/misc/ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  api-clientes-network:
+    driver: bridge
